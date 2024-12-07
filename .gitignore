@@ -1,2 +1,4 @@
 .session
 .advent
+__pycache__
+input.txt
