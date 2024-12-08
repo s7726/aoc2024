@@ -1,6 +1,8 @@
 import unittest
 import re
 import random
+from functools import cmp_to_key
+from collections import defaultdict
 
 
 class TestPart(unittest.TestCase):
@@ -69,13 +71,34 @@ def passes_rules(rules, pages):
     return passes
 
 
+def passes_rules_list(rules, pages):
+    passes = {}
+    for i, page in enumerate(pages):
+        try:
+            rule = rules[page]
+
+        except KeyError:
+            passes[i] = None
+            continue
+
+        passes[i] = [p not in rule for p in pages[:i]]
+
+    return passes
+
+
+def sort_on_rules(rules):
+    rules = rules
+
+    def sort_pages(a, b):
+        if b in rules[a]:
+            return -1
+        return 1
+
+    return sort_pages
+
+
 def make_failing_pass(rules, pages):
-    new_pages = pages.copy()
-
-    while not passes_rules(rules, new_pages):
-        random.shuffle(new_pages)
-
-    return new_pages
+    return sorted(pages, key=cmp_to_key(sort_on_rules(rules)))
 
 
 def process(input):
@@ -88,7 +111,7 @@ def process(input):
 
     page_numbers = [[int(p) for p in l] for l in raw_numbers]
 
-    rules = {}
+    rules = defaultdict(list)
 
     for f_, s_ in raw_rules:
         first = int(f_)
@@ -114,7 +137,7 @@ def process(input):
 
     for i, f in enumerate(fails):
         fixed_fails.append(make_failing_pass(rules, f))
-        print(f"{i/len(fails):.1%}")
+        print(f"{i/len(fails):>6.1%}", end="\r")
 
     for line in fixed_fails:
         total += middle_number(line)
