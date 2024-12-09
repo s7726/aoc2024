@@ -76,7 +76,7 @@ class TestPart(unittest.TestCase):
         self.assertEqual(process(test_in), out)
 
     def test_new_point(self):
-        self.assertEqual(new_point_at_slope_dist((0, 0), 1, 2), [(2, 2), (-2, -2)])
+        self.assertEqual(new_points_at_slope_dist((0, 0), 1, 2), [(2, 2), (-2, -2)])
 
 
 def print_board(board):
@@ -93,6 +93,10 @@ def fill_board(board, points, char="#"):
         except IndexError:
             print(f"ERROR: {point}")
             raise IndexError
+
+
+def gridpoint_distance(a, b):
+    return (b[0] - a[0], b[1] - a[1])
 
 
 def euclid_dist(a, b):
@@ -119,7 +123,19 @@ def point_not_between_antennas(antenna_pairing, point):
     return not (top or right or left or bottom)
 
 
-def new_point_at_slope_dist(point, sl, dist):
+def tuple_add(a, b):
+    return tuple(x + y for x, y in zip(a, b))
+
+
+def tuple_subtract(a, b):
+    return tuple(x - y for x, y in zip(a, b))
+
+
+def new_gridpoints_from_start(point, grid_distance):
+    return [tuple_add(point, grid_distance), tuple_subtract(point, grid_distance)]
+
+
+def new_points_at_slope_dist(point, sl, dist):
     """lifted largely from https://www.geeksforgeeks.org/find-points-at-a-given-distance-on-a-line-of-given-slope/"""
     # slope is 0
     a = [0, 0]
@@ -177,11 +193,10 @@ def process(input):
         freq_pairs[freq] = antenna_pairings
 
         for antenna_pairing in antenna_pairings:
-            dist = euclid_dist(*antenna_pairing)
-            sl = slope(*antenna_pairing)
+            dist = gridpoint_distance(*antenna_pairing)
 
             for point in antenna_pairing:
-                new_points = new_point_at_slope_dist(point, sl, dist)
+                new_points = new_gridpoints_from_start(point, dist)
                 new_points = [
                     p
                     for p in new_points
